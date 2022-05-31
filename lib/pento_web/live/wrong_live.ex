@@ -7,7 +7,8 @@ defmodule PentoWeb.WrongLive do
       score: 0,
       message: "Make a guess",
       name: "Anonymous",
-      gender: "male"
+      gender: "male",
+      time: time()
       )
     }
   end
@@ -18,7 +19,7 @@ defmodule PentoWeb.WrongLive do
     <h1>Your score: <%= @score %></h1>
     <h2>
       <%= @message %>
-      It's <%= time() %>
+      It's <%= @time %>
     </h2>
     <h2>
       <%= for n <- 1..10 do %>
@@ -48,7 +49,8 @@ defmodule PentoWeb.WrongLive do
       assign(
         socket,
         message: message,
-        score: score
+        score: score,
+        time: time()
       )
     }
   end
@@ -65,7 +67,8 @@ defmodule PentoWeb.WrongLive do
       :noreply,
       assign(
         socket,
-        name: new_name
+        name: new_name,
+        time: time()
       )
     }
   end
