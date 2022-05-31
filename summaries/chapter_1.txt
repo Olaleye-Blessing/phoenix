@@ -1,0 +1,3 @@
+The mix.exs file contains the instructions for which dependencies to install and how to run them
+
+LiveView lifecycle begins in the Phoenix router
