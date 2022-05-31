@@ -1,14 +1,18 @@
 defmodule PentoWeb.WrongLive do
   use Phoenix.LiveView, layout: {PentoWeb.LayoutView, "live.html"}
+  @max_random 40
 
   def mount(_params, _session, socket) do
     {:ok, assign(
       socket,
       score: 0,
-      message: "Make a guess",
+      message: "Make a guess between 0 and #{@max_random}(inclusive)",
       name: "Anonymous",
       gender: "male",
-      time: time()
+      time: time(),
+      random_num: :rand.uniform(@max_random + 1),
+      max_random: @max_random,
+      guessed_right: true
       )
     }
   end
@@ -22,7 +26,7 @@ defmodule PentoWeb.WrongLive do
       It's <%= @time %>
     </h2>
     <h2>
-      <%= for n <- 1..10 do %>
+      <%= for n <- 1..@max_random do %>
         <a href="#" phx-click="guess" phx-value-number={n}><%= n %></a>
       <% end %>
     </h2>
@@ -34,6 +38,11 @@ defmodule PentoWeb.WrongLive do
       <p>Player's genger: <span><%= @gender %></span></p>
       <!-- <button phx-click="gender">Switch Gender</button> -->
     </div>
+    <div>
+      <%= if @guessed_right do %>
+        <button phx-click="restart">Restart</button>
+      <% end %>
+    </div>
     """
   end
 
@@ -41,9 +50,37 @@ defmodule PentoWeb.WrongLive do
     DateTime.utc_now |> to_string
   end
 
-  def handle_event("guess", %{"number" => guess}=data, socket) do
-    message = "Your guess: #{guess}. Wrong. Guess again. "
-    score = socket.assigns.score - 1
+  def handle_event("restart", _data, socket) do
+    IO.puts "Restarting"
+
+    # fix this with live_patch
+    { :noreply,
+      assign(
+        socket,
+      score: 0,
+      message: "Make a guess between 0 and #{@max_random}(inclusive)",
+      name: "Anonymous",
+      gender: "male",
+      time: time(),
+      random_num: :rand.uniform(@max_random + 1),
+      max_random: @max_random,
+      guessed_right: true
+      )
+    }
+  end
+
+  def handle_event("guess", data, socket) do
+    %{"number" => guess} = data
+    %{random_num: secret_number, score: current_score} = socket.assigns
+
+    guess = String.to_integer(guess)
+
+    {message, score} = cond do
+      guess == secret_number -> {"You guessed right", current_score + 1}
+      guess > secret_number -> {"You guess is greater than secret number", current_score - 1}
+      guess < secret_number -> {"You guess is less than secret number", current_score - 1}
+    end
+
     {
       :noreply,
       assign(
