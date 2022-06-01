@@ -1,6 +1,8 @@
 defmodule PentoWeb.Router do
   use PentoWeb, :router
 
+  import PentoWeb.UserAuth
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -8,6 +10,7 @@ defmodule PentoWeb.Router do
     plug :put_root_layout, {PentoWeb.LayoutView, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :fetch_current_user
   end
 
   pipeline :api do
@@ -19,7 +22,7 @@ defmodule PentoWeb.Router do
 
     get "/", PageController, :index #this is like the home page/route
 
-    live "/guess", WrongLive # guess page/route
+    # live "/guess", WrongLive # guess page/route
   end
 
   # Other scopes may use custom stacks.
@@ -55,4 +58,58 @@ defmodule PentoWeb.Router do
       forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
   end
+
+  ## Authentication routes
+
+  scope "/", PentoWeb do
+    pipe_through [:browser, :redirect_if_user_is_authenticated]
+
+    get "/users/register", UserRegistrationController, :new
+    post "/users/register", UserRegistrationController, :create
+    get "/users/log_in", UserSessionController, :new
+    post "/users/log_in", UserSessionController, :create
+    get "/users/reset_password", UserResetPasswordController, :new
+    post "/users/reset_password", UserResetPasswordController, :create
+    get "/users/reset_password/:token", UserResetPasswordController, :edit
+    put "/users/reset_password/:token", UserResetPasswordController, :update
+  end
+
+  scope "/", PentoWeb do
+    pipe_through [:browser, :require_authenticated_user]
+
+    # live "/guess", WrongLive # guess page/route
+    # Please, search for `live_session` in this file to read about it
+    live_session :default, on_mount: PentoWeb.UserAuthLive do
+      live "/guess", WrongLive
+    end
+
+    get "/users/settings", UserSettingsController, :edit
+    put "/users/settings", UserSettingsController, :update
+    get "/users/settings/confirm_email/:token", UserSettingsController, :confirm_email
+  end
+
+  scope "/", PentoWeb do
+    pipe_through [:browser]
+
+    delete "/users/log_out", UserSessionController, :delete
+    get "/users/confirm", UserConfirmationController, :new
+    post "/users/confirm", UserConfirmationController, :create
+    get "/users/confirm/:token", UserConfirmationController, :edit
+    post "/users/confirm/:token", UserConfirmationController, :update
+  end
+
+  # # use live_session to group live views that share the same layout file
+  # scope "/", PentoWeb do
+  #   pipe_through [:browser, :require_authenticated_admin]
+
+  #   # the routes below share admin.html layout
+  #   live_session :default, root_layout: {PentoWeb.LayoutView, "admin.html"} do
+  #     live "/game-sales", Admin.GameSalesLive
+  #     live "/survey-results", Admin.SurveyResultsLive
+  #   end
+
+  #   # NOTE: because the above routes are sharing the same layout through live_session, regular HTTP request will be skipped which means plug pipeline(s) is/are skipped. This leads to security loophole because these are protected route. A solution is to implement the same logic when a live view mounts so as to ensure that if a live view is live redirected to from a different live view in the same live session, it is also protected.
+  # end
+
+
 end

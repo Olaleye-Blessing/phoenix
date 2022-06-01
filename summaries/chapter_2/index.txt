@@ -1,0 +1,72 @@
+The central type of many
+Phoenix modules is a connection struct defined by the Plug.Conn module. The connection represent a web request.
+
+The Plug.Conn Common Data Structure
+Plug is a framework for building web programs, one function at a time. Plugs
+are either Elixir functions, or tiny modules that support a small function
+named call. Each function makes one little change to a connection—the Plug.Conn data structure.
+
+the data structure looks like:
+%Plug.Conn{
+...
+host: "www.example.com",
+method: "GET",
+...
+resp_body: nil,
+resp_headers: [{"cache-control", "max-age=0, private, must-revalidate"}],
+status: nil
+...
+}
+
+===============================
+
+Reducers in Plug
+Phoenix configuration code is often full of plugs
+
+the below...
+
+plug Plug.MethodOverride
+plug Plug.Head
+plug Plug.Session, @session_options
+plug PentoWeb.Router
+
+...translates to
+
+connection
+|> Plug.MethodOverride.call()
+|> Plug.Head.call()
+|> Plug.Session.call(@session_options)
+|> PentoWeb.Router.call()
+
+Phoenix requests can be broken down into smaller plugs.
+
+connection_from_request
+|> endpoint --- this is the constructor
+|> router
+|> custom_application --- this can be a phoenix controller, channels application or a live view
+
+PIpelines are policies
+a scope block groups together common kind of requests, possibly with a policy:
+
+the below scope applies to all route cause it starts with "/"
+scope "/", PentoWeb do
+    pipe_through :browser
+    ... individual routes here...
+end
+
+Routes
+live "/guess", WrongLive
+
+live is the route type
+"/guess" is the URL pattern
+WrongLive is the module that responds to the route
+
+Authentication
+using phx.gen.auth
+
+On creating user, it's either {:ok, User} on success or {:error, changeset} on error
+
+use live_session macro to group similar live views that share a layout file.
+
+whenerver a route is using live_session, always make sure you place the same logic that is the (live_session) pipeline in on_mount lifecycle hook.
+on_mount lifecycle hook will fire before the live view mounts

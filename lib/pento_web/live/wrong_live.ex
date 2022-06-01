@@ -2,11 +2,13 @@ defmodule PentoWeb.WrongLive do
   use Phoenix.LiveView, layout: {PentoWeb.LayoutView, "live.html"}
   @max_random 40
 
-  def mount(_params, _session, socket) do
+  # alias Pento.Accounts
+  def mount(_params, session, socket) do
     {:ok, assign(
       socket,
       score: 0,
       message: "Make a guess between 0 and #{@max_random}(inclusive)",
+      session_id: session["live_socket_id"],
       name: "Anonymous",
       gender: "male",
       time: time(),
@@ -42,6 +44,11 @@ defmodule PentoWeb.WrongLive do
       <%= if @guessed_right do %>
         <button phx-click="restart">Restart</button>
       <% end %>
+    </div>
+    <div>
+        <%= @current_user.email %>
+        <br/>
+        <%= @session_id %>
     </div>
     """
   end
