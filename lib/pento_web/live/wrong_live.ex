@@ -4,19 +4,19 @@ defmodule PentoWeb.WrongLive do
 
   # alias Pento.Accounts
   def mount(_params, session, socket) do
-    {:ok, assign(
-      socket,
-      score: 0,
-      message: "Make a guess between 0 and #{@max_random}(inclusive)",
-      session_id: session["live_socket_id"],
-      name: "Anonymous",
-      gender: "male",
-      time: time(),
-      random_num: :rand.uniform(@max_random + 1),
-      max_random: @max_random,
-      guessed_right: true
-      )
-    }
+    {:ok,
+     assign(
+       socket,
+       score: 0,
+       message: "Make a guess between 0 and #{@max_random}(inclusive)",
+       session_id: session["live_socket_id"],
+       name: "Anonymous",
+       gender: "male",
+       time: time(),
+       random_num: :rand.uniform(@max_random + 1),
+       max_random: @max_random,
+       guessed_right: true
+     )}
   end
 
   def render(assigns) do
@@ -54,26 +54,25 @@ defmodule PentoWeb.WrongLive do
   end
 
   def time() do
-    DateTime.utc_now |> to_string
+    DateTime.utc_now() |> to_string
   end
 
   def handle_event("restart", _data, socket) do
-    IO.puts "Restarting"
+    IO.puts("Restarting")
 
     # fix this with live_patch
-    { :noreply,
-      assign(
-        socket,
-      score: 0,
-      message: "Make a guess between 0 and #{@max_random}(inclusive)",
-      name: "Anonymous",
-      gender: "male",
-      time: time(),
-      random_num: :rand.uniform(@max_random + 1),
-      max_random: @max_random,
-      guessed_right: true
-      )
-    }
+    {:noreply,
+     assign(
+       socket,
+       score: 0,
+       message: "Make a guess between 0 and #{@max_random}(inclusive)",
+       name: "Anonymous",
+       gender: "male",
+       time: time(),
+       random_num: :rand.uniform(@max_random + 1),
+       max_random: @max_random,
+       guessed_right: true
+     )}
   end
 
   def handle_event("guess", data, socket) do
@@ -82,11 +81,12 @@ defmodule PentoWeb.WrongLive do
 
     guess = String.to_integer(guess)
 
-    {message, score} = cond do
-      guess == secret_number -> {"You guessed right", current_score + 1}
-      guess > secret_number -> {"You guess is greater than secret number", current_score - 1}
-      guess < secret_number -> {"You guess is less than secret number", current_score - 1}
-    end
+    {message, score} =
+      cond do
+        guess == secret_number -> {"You guessed right", current_score + 1}
+        guess > secret_number -> {"You guess is greater than secret number", current_score - 1}
+        guess < secret_number -> {"You guess is less than secret number", current_score - 1}
+      end
 
     {
       :noreply,
@@ -101,11 +101,13 @@ defmodule PentoWeb.WrongLive do
 
   def handle_event("name", _data, socket) do
     current_name = socket.assigns.name
-    new_name = if current_name == "Blessing" do
-      "Yinka"
-    else
-      "Blessing"
-    end
+
+    new_name =
+      if current_name == "Blessing" do
+        "Yinka"
+      else
+        "Blessing"
+      end
 
     {
       :noreply,

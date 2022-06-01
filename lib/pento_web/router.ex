@@ -20,7 +20,8 @@ defmodule PentoWeb.Router do
   scope "/", PentoWeb do
     pipe_through :browser
 
-    get "/", PageController, :index #this is like the home page/route
+    # this is like the home page/route
+    get "/", PageController, :index
 
     # live "/guess", WrongLive # guess page/route
   end
@@ -110,6 +111,4 @@ defmodule PentoWeb.Router do
 
   #   # NOTE: because the above routes are sharing the same layout through live_session, regular HTTP request will be skipped which means plug pipeline(s) is/are skipped. This leads to security loophole because these are protected route. A solution is to implement the same logic when a live view mounts so as to ensure that if a live view is live redirected to from a different live view in the same live session, it is also protected.
   # end
-
-
 end
