@@ -1,0 +1,147 @@
+The schema layer describes the Elixir entities that map to our individual database tables. It provides functions for interacting with those database tables.
+The API layer, called a context, provides the interface through which we will interact with the schema, and therefore the database.
+========================================================================
+
+Phoenix live generator
+mix phx.gen.live Accounts User users name:string
+
+Accounts is the context which serves as the API boundary for a given resource.
+
+User is the name of the resource and schema
+
+users and name:string are the names and types of fileds in our schema.
+=======================================================================
+
+live "/products/new", ProductLive.Index, :new
+The live macro instructs Phoenix that this request will start a live view.
+The ProductLive.Index argument is the module that implements the live view.
+The :new argument is the live action
+========================================================================
+
+mix phx.gen.live Catalog Product products name:string sku:integer:unique
+
+Understand The Generated Core
+
+Catalog context represents the boundary, it is the API through which external input can make its way into the application
+
+Migration files allow us to build key changes to the database into code. Executing the files makes these changes to your database. Since these files need to be executed in a specific order, the filename should begin with a timestamp. You can, and likely will, build your own custom migration files, and/or customize generated migration files.
+=========================================================================
+
+Shchema 
+
+changeset
+The(below) changeset in schema implements the change policy for new records and updates alike.
+
+def changeset(product, attrs) do
+    product
+    |> cast(attrs, [:name, :description, :unit_price, :sku])
+    |> validate_required([:name, :description, :unit_price, :sku])
+    |> unique_constraint(:sku)
+end
+
+The pipeline starts with the Product struct we want to change.
+
+The Ecto.Changeset.cast/4 function filters the user data we pass into params. This changeset allows the :name, :description, :unit_price, and :sku fields. Other fields are rejected
+
+Ecto.Changeset.validate_required/1 sets the fields that are compulsory/required.
+
+Ecto.Changeset.unique_constraint/1 sets the fields that should be unique.
+
+========================================================================
+Understand The Generated Boundary
+
+Contexts represent the boundary for an application which has at least these responsibilities:
+Access External Services
+    - The context allows a single point of access for external services.
+
+Abstract Away Tedious Details
+    - The context abstracts away tedious, inconvenient concepts.
+
+Handle uncertainty
+    - The context handles uncertainty, often by using result tuples.
+
+Present a single, common API
+    - The context provides a single access point for a family of services.
+
+Accessing External Sevices
+Any code that calls on the Repo module belongs in the context module
+
+Handle uncertainty
+def create_product(attrs \\ %{}) do
+%Product{}
+|> Product.changeset(attrs)
+|> Repo.insert()
+end
+
+def update_product(%Product{} = product, attrs) do
+product
+|> Product.changeset(attrs)
+|> Repo.update()
+end
+
+If the changeset is not valid, the database transaction executed via the call to Repo.insert/1 or Repo.update/1 will ignore it, and return the changeset with errors.
+If the changeset is valid, the database will process the request. This type of uncertainty belongs in our context.
+We don’t know what will be returned by our call to the Repo module but it’s the context’s job to manage this uncertainty and orchestrate any downstream code that depends on these outcomes.
+
+Boundary, Core, or Script?
+Any function that deals with process machinery (think “input/output”) or uncertainty will go in the boundary, or context.
+Functions that have certainty and support the boundary go in the core.
+Scripts that support operational tasks, such as running tests, migrations, or seeds, live outside the lib codebase altogether.
+=================================================================================
+
+The Context API is With-land
+use with/1 function instead of pipe operator to manage code flow that contains uncertainty.
+
+The with/1 function allows us to compose a series of function calls while providing an option to execute if a given function’s return doesn’t match a corresponding expectation.
+
+pipe operator isn't the right choice when the result of a given step in a pipeline isn't certain.
+
+defmodule Pento.Catalog do
+    alias Catalog.Coupon.Validator
+    alias Catalog.Coupon
+
+    defp validate_code(code) do
+        {:ok, code} = Validator.validate_code(code)
+    end
+
+    defp calculate_new_total(code, purchase_total) do
+        Coupon.calculate_new_total(code, purchase_total) # will return an :ok, *or* an :error tuple
+    end
+
+    def apply_coupon_code(code, purchase_total) do
+        code
+        |> validate_code
+        |> calculate_new_total(purchase_total)
+    end
+end
+
+validate_code can only hanlde :ok result which means it will fail on :error
+calculate_new_total works on validate_code which means it will fail if validate_code fails
+the pipelien built here can only handle :ok case
+
+this is the perfect place to use with/1 cause it can hanlde error case
+
+defmodule Pento.Catalog do
+    alias Catalog.Coupon.Validator
+    alias Catalog.Coupon
+
+    defp validate_code(code) do
+        Validator.validate_code(code) # will return an :ok, *or* an :error tuple
+    end
+
+    defp calculate_new_total(code, purchase_total) do
+        Coupon.calculate_new_total(code, purchase_total) # will return an :ok, *or* an :error tuple
+    end
+
+    def apply_coupon_code(code, purchase_total) do
+        with {:ok, code} <- validate_coupon(code),
+             {:ok, new_total} <- calculate_new_total(code, purchase_total) do
+                new_total
+        else
+            {:error, reason} ->
+                IO.puts "Error applying coupon: #{reason}"
+            _ ->
+                IO.puts "Unknown error applying coupon."
+        end
+    end
+end

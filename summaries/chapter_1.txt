@@ -1,3 +1,15 @@
 The mix.exs file contains the instructions for which dependencies to install and how to run them
 
 LiveView lifecycle begins in the Phoenix router
+
+Migrations
+Before your application can work with a database table, your migrations will need to be run to ensure that the database table exists, has the right structure for the data you’ll put in it, and has the right set of indexes for performance.
+
+Migration files allow us to build key changes to the database into code. Executing the files makes these changes to your database. Since these files need to be executed in a specific order, the filename should begin with a timestamp. You can, and likely will, build your own custom migration files, and/or customize generated migration files.
+
+- basic commands
+mix phx.new --- start new phoenix project
+
+mix phx.server --- start phoenix app
+
+iex -S mix phx.server --- run app inside IEx (Interactive Elixir)
