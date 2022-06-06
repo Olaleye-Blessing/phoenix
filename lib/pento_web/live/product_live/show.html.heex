@@ -1,4 +1,20 @@
 <h1>Show Product</h1>
+<div>
+  <h4>Trace Through a Live View Answers</h4>
+  <ol>
+    <li>"/products/:id" get invoked</li>
+    <li>It adds the :live_action to socket</li>
+    <li>
+      It checks the live action to know which of the private function to all.
+      Then it gets the id params, use the id params to search for product and update the socket state.
+    </li>
+    <li>
+    The template receives live_action key.
+    It checks and shows the form if the live_action key is :edit.
+    The form supports validate and submit events. Validate event triggers when any input in the form change.
+    </li>
+  </ol>
+</div>
 
 <%= if @live_action in [:edit] do %>
   <.modal return_to={Routes.product_show_path(@socket, :show, @product)}>
