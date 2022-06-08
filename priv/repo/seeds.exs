@@ -22,8 +22,9 @@ products = [
   %{
     name: "Tic-Tac-Toe",
     description: "The game of Xs and Os",
-    sku: 11_121_314, unit_price: 3.00
-    },
+    sku: 11_121_314,
+    unit_price: 3.00
+  },
   %{
     name: "Table Tennis",
     description: "Bat the ball back and forth. Don't miss!",

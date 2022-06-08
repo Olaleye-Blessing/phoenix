@@ -9,9 +9,8 @@ defmodule PentoWeb.ProductLive.Index do
     # {:ok, assign(socket, :products, list_products())}
 
     {:ok,
-      socket
-      |> assign(:products, list_products())
-    }
+     socket
+     |> assign(:products, list_products())}
 
     # {:ok,
     #  assign(
