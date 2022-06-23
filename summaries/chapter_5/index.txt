@@ -1,0 +1,40 @@
+use phx-debounce to rate limit form events, like phx-change, for a single field.
+
+phx-debounce accepts an integer or blur
+-----------------------------------------------------
+
+steps to alter database
+1 generate a migration file
+2 add logic to alter field in the file
+3 run migration
+4 update the shema function
+
+e.g add age to person table
+
+step 1
+- mix ecto.gen.migration add_alive
+
+step 2
+defmodule Pento.Repo.Migrations.AddAgeToPerson do
+  use Ecto.Migration
+  def change do
+    alter table(:person) do
+      add :age, :number
+    end
+  end
+end
+
+step 3 
+- mix ecto.migrate
+-----------------------------------
+
+live uploads
+
+allow_upload/3 is used to upload image in a component/liveview
+
+for a component, call allow_upload/3 when the component first starts up and establishes its initial state in the update/2 function.
+for a live view, call allow_upload/3 in the mount/3 function.
+
+The allow_upload/3 function is a reducer that takes in an argument of the socket,
+the upload name, and the upload options and returns an annotated socket
+
